@@ -18,6 +18,7 @@ GREEN = (0, 255, 0)
 GRAY = (150, 150, 150)
 YELLOW = (255, 255, 0) # For menu selection highlight
 DARK_GRAY = (50, 50, 50) # For menu button background
+LIGHT_GRAY = (200, 200, 200) # For description text
 
 # Beam properties
 BEAM_WIDTH = 5
@@ -74,6 +75,7 @@ except pygame.error as e:
 # Fonts for messages
 font_title = pygame.font.Font(None, 90)
 font_menu = pygame.font.Font(None, 50)
+font_description = pygame.font.Font(None, 28) # Smaller font for descriptions
 font_win = pygame.font.Font(None, 74)
 font_game_over = pygame.font.Font(None, 74)
 font_restart = pygame.font.Font(None, 40)
@@ -90,19 +92,71 @@ def restart_game():
     vader_direction = 1
     vader_shot_timer = 0
 
-# Machine Learning options for the menu
-ml_options = [
-    "Rule-Based (Constant Movement)", # This is what's currently implemented
-    "Reinforcement Learning (Q-Learning)",
-    "Genetic Algorithm",
-    "Neural Network (Pre-Trained)",
-    "Simple Heuristic (Predictive)"
-]
+# Machine Learning options and their descriptions
+ml_options_data = {
+    "Rule-Based (Constant Movement)": {
+        "description": (
+            "Vader's movement is entirely predictable, following a simple, pre-programmed pattern. "
+            "He will move back and forth at a constant speed, bouncing off the screen edges. "
+            "This mode demonstrates a non-adaptive AI, making it easier to predict and defeat once you learn his pattern."
+        )
+    },
+    "Reinforcement Learning (Q-Learning)": {
+        "description": (
+            "Vader learns to dodge by trial and error. He will explore different movements and "
+            "receive 'rewards' for dodging your beams and 'penalties' for being hit. "
+            "Over time, he aims to optimize his dodging strategy based on past experiences, becoming more challenging as he 'learns'."
+        )
+    },
+    "Genetic Algorithm": {
+        "description": (
+            "Vader's dodging strategy evolves over generations, much like natural selection. "
+            "Multiple 'Vaders' with slightly different dodging behaviors will compete. "
+            "The most successful dodgers 'survive' and 'reproduce', passing on their best traits. "
+            "This process aims to create an increasingly resilient dodging AI over many game rounds."
+        )
+    },
+    "Neural Network (Pre-Trained)": {
+        "description": (
+            "Vader's dodging is controlled by a pre-trained artificial neural network. "
+            "This network has already learned complex dodging patterns from extensive simulated gameplay. "
+            "While not learning in real-time during your game, it demonstrates the power of deep learning "
+            "to create highly effective and intelligent AI behaviors."
+        )
+    },
+    "Simple Heuristic (Predictive)": {
+        "description": (
+            "Vader uses a simple predictive heuristic to anticipate where your beams will land. "
+            "He calculates the beam's trajectory and attempts to move to a safe spot. "
+            "This AI is more intelligent than a purely rule-based one, reacting to threats "
+            "by making calculated movements rather than just following a fixed path."
+        )
+    }
+}
+ml_option_names = list(ml_options_data.keys())
+
+# Function to wrap text for display
+def wrap_text(text, font, max_width):
+    words = text.split(' ')
+    lines = []
+    current_line = []
+    for word in words:
+        test_line = ' '.join(current_line + [word])
+        if font.size(test_line)[0] <= max_width:
+            current_line.append(word)
+        else:
+            lines.append(' '.join(current_line))
+            current_line = [word]
+    lines.append(' '.join(current_line))
+    return lines
 
 def main_menu():
     global selected_ml_type
     menu_running = True
     selected_option_index = 0 # Index of the currently highlighted option
+    
+    # Menu states: 0 = selecting option, 1 = displaying description
+    menu_state = 0 
 
     while menu_running:
         for event in pygame.event.get():
@@ -110,45 +164,81 @@ def main_menu():
                 pygame.quit()
                 exit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    selected_option_index = (selected_option_index - 1) % len(ml_options)
-                elif event.key == pygame.K_DOWN:
-                    selected_option_index = (selected_option_index + 1) % len(ml_options)
-                elif event.key == pygame.K_RETURN: # Enter key to select
-                    selected_ml_type = ml_options[selected_option_index]
-                    menu_running = False # Exit menu loop
-                elif event.key == pygame.K_q: # Quit from menu
+                if menu_state == 0: # Selecting option
+                    if event.key == pygame.K_UP:
+                        selected_option_index = (selected_option_index - 1) % len(ml_option_names)
+                    elif event.key == pygame.K_DOWN:
+                        selected_option_index = (selected_option_index + 1) % len(ml_option_names)
+                    elif event.key == pygame.K_RETURN: # Select option, move to description state
+                        menu_state = 1
+                elif menu_state == 1: # Displaying description
+                    if event.key == pygame.K_RETURN: # Confirm selection and exit menu
+                        selected_ml_type = ml_option_names[selected_option_index]
+                        menu_running = False
+                
+                if event.key == pygame.K_q: # Quit from any menu state
                     pygame.quit()
                     exit()
 
         screen.fill(BLACK)
 
-        # Title
-        title_text = font_title.render("Star Wars", True, WHITE)
-        title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4))
-        screen.blit(title_text, title_rect)
+        if menu_state == 0: # Displaying options
+            # Title
+            title_text = font_title.render("Star Wars Dodgeball", True, WHITE)
+            title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4))
+            screen.blit(title_text, title_rect)
 
-        # Instructions
-        instruction_text = font_menu.render("Choose Vader's AI:", True, WHITE)
-        instruction_rect = instruction_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 80))
-        screen.blit(instruction_text, instruction_rect)
+            # Instructions
+            instruction_text = font_menu.render("Choose Vader's AI:", True, WHITE)
+            instruction_rect = instruction_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 120))
+            screen.blit(instruction_text, instruction_rect)
 
-        # Menu options
-        for i, option in enumerate(ml_options):
-            text_color = YELLOW if i == selected_option_index else WHITE
-            option_text = font_menu.render(option, True, text_color)
+            # Menu options
+            for i, option_name in enumerate(ml_option_names):
+                text_color = YELLOW if i == selected_option_index else WHITE
+                option_text = font_menu.render(option_name, True, text_color)
+                
+                # Calculate position for each option
+                option_rect = option_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 60 + i * 60))
+                
+                # Draw a background rectangle for the selected option
+                if i == selected_option_index:
+                    padding = 20
+                    bg_rect = pygame.Rect(option_rect.left - padding, option_rect.top - padding,
+                                          option_rect.width + 2 * padding, option_rect.height + 2 * padding)
+                    pygame.draw.rect(screen, DARK_GRAY, bg_rect, border_radius=10) # Rounded corners
+                
+                screen.blit(option_text, option_rect)
             
-            # Calculate position for each option
-            option_rect = option_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 20 + i * 60))
+            # Instruction to press ENTER to view description
+            select_instruction = font_restart.render("Press ENTER to View Description", True, WHITE)
+            select_instruction_rect = select_instruction.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 50))
+            screen.blit(select_instruction, select_instruction_rect)
+
+        elif menu_state == 1: # Displaying description
+            current_option_name = ml_option_names[selected_option_index]
+            description = ml_options_data[current_option_name]["description"]
             
-            # Draw a background rectangle for the selected option
-            if i == selected_option_index:
-                padding = 20
-                bg_rect = pygame.Rect(option_rect.left - padding, option_rect.top - padding,
-                                      option_rect.width + 2 * padding, option_rect.height + 2 * padding)
-                pygame.draw.rect(screen, DARK_GRAY, bg_rect, border_radius=10) # Rounded corners
+            # Display selected option name
+            selected_title = font_menu.render(current_option_name, True, YELLOW)
+            selected_title_rect = selected_title.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4))
+            screen.blit(selected_title, selected_title_rect)
+
+            # Wrap and display description
+            wrapped_lines = wrap_text(description, font_description, SCREEN_WIDTH - 100) # 100px padding
             
-            screen.blit(option_text, option_rect)
+            y_offset = SCREEN_HEIGHT // 2 - (len(wrapped_lines) * font_description.get_linesize()) // 2 # Center vertically
+            
+            for line in wrapped_lines:
+                line_surface = font_description.render(line, True, LIGHT_GRAY)
+                line_rect = line_surface.get_rect(center=(SCREEN_WIDTH // 2, y_offset))
+                screen.blit(line_surface, line_rect)
+                y_offset += font_description.get_linesize() + 5 # Move down for next line
+            
+            # Add instruction to press ENTER to start
+            start_instruction = font_restart.render("Press ENTER to Start Game", True, WHITE)
+            start_instruction_rect = start_instruction.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 50))
+            screen.blit(start_instruction, start_instruction_rect)
 
         pygame.display.flip()
         clock.tick(60)
