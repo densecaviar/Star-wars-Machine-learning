@@ -1,11 +1,11 @@
-Star Wars: AI Evasion Project
-Hey there! This project is a Pygame simulation where you, as Luke Skywalker, face off against Darth Vader. The cool part? Vader's dodging skills are powered by different types of Machine Learning! It's a fun way to see how AI learns and adapts right in front of you.
+Star Wars: Machine Learning project
+Hey there! This is a Pygame simulation where you, as Luke Skywalker, face off against Darth Vader. The cool part? Vader's dodging skills are powered by different types of Machine Learning algorithms! It's a fun way to see how AI learns and adapts right in front of you.
 
 What You Can Do
 
 Play as Luke:
 
-Move left and right at the bottom of the screen using Left/Right Arrow Keys or A/D.
+Move left and right at the bottom of the screen using Left/Right Arrow Keys.
 
 Fire blue energy beams upwards by pressing SPACE.
 
@@ -13,7 +13,7 @@ Fight Against Vader (The AI):
 
 Vader moves back and forth across the top of the screen.
 
-He'll occasionally shoot red energy beams down at you. Watch out!
+He'll occasionally shoot red energy beams down at you.
 
 Game Rules:
 
@@ -33,7 +33,7 @@ Press ENTER once to read a short explanation of how that AI works.
 
 Press ENTER again to confirm your choice and jump into the game.
 
-Learn About AI: This project is built to help you visually understand different machine learning ideas in an interactive way.
+Learn About AI: This project is built to visually understand different machine learning ideas in an interactive way.
 
 How Vader Learns: The Machine Learning Strategies
 We're exploring several ways to make Vader smart. Here's a look at the AI types you can choose for him:
@@ -63,13 +63,11 @@ Press ENTER again to start the game with that AI.
 
 Control Luke:
 
-Move Left: LEFT ARROW or A
+Move Left: LEFT ARROW 
 
-Move Right: RIGHT ARROW or D
+Move Right: RIGHT ARROW
 
 Shoot: SPACEBAR
-
-Win the Battle: Avoid Vader's red beams and hit him with your blue ones!
 
 Play Again: After a round, press R to restart and pick a new AI.
 
@@ -84,8 +82,8 @@ Pygame library
 Installation
 Get the Code:
 
-git clone https://github.com/your-username/star-wars-ai-evasion.git
-cd star-wars-ai-evasion
+git clone https://github.com/densecaviar/Star-wars-Machine-learning
+cd Star-wars-Machine-learning
 
 Install Pygame:
 
@@ -96,7 +94,7 @@ Make sure your luke.png and vader.png image files are in the same folder as your
 
 Then, run it from your terminal:
 
-python your_game_file_name.py # Remember to use your actual script name!
+python game.py 
 
 What's Next
 Implementing all the cool machine learning algorithms for Vader's dodging.
@@ -105,10 +103,10 @@ Adding scores and maybe a high-score list.
 
 More levels or ways to make the game harder.
 
-Making the visuals and sounds even better!
+Making the visuals and sounds even better.
 
 Want to Contribute?
-Got ideas, found a bug, or want to help build one of those awesome AI brains? Feel free to fork this repo, open an issue, or send a pull request! Let's make this project even cooler together!
+Got ideas, found a bug, or want to help build one? Feel free to fork this repo, open an issue, or send a pull request! Let's make this project even cooler.
 
 License
 This project is open source.
