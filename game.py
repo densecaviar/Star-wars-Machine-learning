@@ -13,9 +13,11 @@ pygame.display.set_caption("Dodgeball!")
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
-BLUE = (0, 0, 255) # New color for Luke's beam
-GREEN = (0, 255, 0) # For win message
-GRAY = (150, 150, 150) # For game over message
+BLUE = (0, 0, 255)
+GREEN = (0, 255, 0)
+GRAY = (150, 150, 150)
+YELLOW = (255, 255, 0) # For menu selection highlight
+DARK_GRAY = (50, 50, 50) # For menu button background
 
 # Beam properties
 BEAM_WIDTH = 5
@@ -23,18 +25,17 @@ BEAM_HEIGHT = 20
 
 # Luke's beam properties
 PLAYER_BEAM_COLOR = BLUE
-PLAYER_BEAM_SPEED = -10  # Negative y = up (moves upwards)
+PLAYER_BEAM_SPEED = -10
 
 # Vader's beam properties
 DODGER_BEAM_COLOR = RED
-DODGER_BEAM_SPEED = 7 # Positive y = down (moves downwards)
-VADER_SHOT_INTERVAL = 60 # Frames between Vader's shots (e.g., 60 frames = 1 second at 60 FPS)
+DODGER_BEAM_SPEED = 7
+VADER_SHOT_INTERVAL = 60 # Frames between Vader's shots
 
 # Player (Luke) properties
 PLAYER_WIDTH = 100
 PLAYER_HEIGHT = 100
-PLAYER_SPEED = 7 # Speed at which Luke moves horizontally
-# Initial position (centered horizontally)
+PLAYER_SPEED = 7
 initial_luke_x = (SCREEN_WIDTH - PLAYER_WIDTH) // 2
 initial_luke_y = 500
 luke_rect = pygame.Rect(initial_luke_x, initial_luke_y, PLAYER_WIDTH, PLAYER_HEIGHT)
@@ -42,41 +43,40 @@ luke_rect = pygame.Rect(initial_luke_x, initial_luke_y, PLAYER_WIDTH, PLAYER_HEI
 # Dodger (Vader) properties
 DODGER_WIDTH = 100
 DODGER_HEIGHT = 100
-DODGER_SPEED = 4 # Speed at which Vader moves horizontally
-# Initial position (centered horizontally, at the top)
+DODGER_SPEED = 4
 initial_vader_x = (SCREEN_WIDTH - DODGER_WIDTH) // 2
 initial_vader_y = 40
 vader_rect = pygame.Rect(initial_vader_x, initial_vader_y, DODGER_WIDTH, DODGER_HEIGHT)
 
 # Game state variables (will be reset by restart_game)
-player_beams = [] # Luke's beams
-vader_beams = [] # Vader's beams
+player_beams = []
+vader_beams = []
 vader_alive = True
 game_over = False
 vader_direction = 1 # 1 for right, -1 for left
-vader_shot_timer = 0 # Timer for Vader's shooting
+vader_shot_timer = 0
+selected_ml_type = None # Stores the chosen ML type from the menu
 
 # Load images
-# Make sure 'luke.png' and 'vader.png' are in the same directory as your script
 try:
-    # It's good practice to use .convert_alpha() for images with transparency
     luke_img = pygame.image.load("luke.png").convert_alpha()
-    luke_img = pygame.transform.scale(luke_img, (PLAYER_WIDTH, PLAYER_HEIGHT)) # Scale image to match rect size
+    luke_img = pygame.transform.scale(luke_img, (PLAYER_WIDTH, PLAYER_HEIGHT))
     vader_img = pygame.image.load("vader.png").convert_alpha()
-    vader_img = pygame.transform.scale(vader_img, (DODGER_WIDTH, DODGER_HEIGHT)) # Scale image to match rect size
+    vader_img = pygame.transform.scale(vader_img, (DODGER_WIDTH, DODGER_HEIGHT))
 except pygame.error as e:
     print(f"Error loading images: {e}")
     print("Please ensure 'luke.png' and 'vader.png' are in the same directory.")
-    # Create placeholder surfaces if images fail to load
     luke_img = pygame.Surface((PLAYER_WIDTH, PLAYER_HEIGHT))
-    luke_img.fill(GREEN) # Placeholder color for Luke
+    luke_img.fill(GREEN)
     vader_img = pygame.Surface((DODGER_WIDTH, DODGER_HEIGHT))
-    vader_img.fill(RED) # Placeholder color for Vader
+    vader_img.fill(RED)
 
 # Fonts for messages
-font_win = pygame.font.Font(None, 74) # Font for "You Win!"
-font_game_over = pygame.font.Font(None, 74) # Font for "Game Over!"
-font_restart = pygame.font.Font(None, 40) # Font for "Press R to Restart"
+font_title = pygame.font.Font(None, 90)
+font_menu = pygame.font.Font(None, 50)
+font_win = pygame.font.Font(None, 74)
+font_game_over = pygame.font.Font(None, 74)
+font_restart = pygame.font.Font(None, 40)
 
 # Function to reset game state
 def restart_game():
@@ -85,10 +85,78 @@ def restart_game():
     vader_beams = []
     vader_alive = True
     game_over = False
-    luke_rect.x = initial_luke_x # Reset Luke's position
-    vader_rect.x = initial_vader_x # Reset Vader's position
-    vader_direction = 1 # Reset Vader's direction to move right initially
-    vader_shot_timer = 0 # Reset Vader's shot timer
+    luke_rect.x = initial_luke_x
+    vader_rect.x = initial_vader_x
+    vader_direction = 1
+    vader_shot_timer = 0
+
+# Machine Learning options for the menu
+ml_options = [
+    "Rule-Based (Constant Movement)", # This is what's currently implemented
+    "Reinforcement Learning (Q-Learning)",
+    "Genetic Algorithm",
+    "Neural Network (Pre-Trained)",
+    "Simple Heuristic (Predictive)"
+]
+
+def main_menu():
+    global selected_ml_type
+    menu_running = True
+    selected_option_index = 0 # Index of the currently highlighted option
+
+    while menu_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    selected_option_index = (selected_option_index - 1) % len(ml_options)
+                elif event.key == pygame.K_DOWN:
+                    selected_option_index = (selected_option_index + 1) % len(ml_options)
+                elif event.key == pygame.K_RETURN: # Enter key to select
+                    selected_ml_type = ml_options[selected_option_index]
+                    menu_running = False # Exit menu loop
+                elif event.key == pygame.K_q: # Quit from menu
+                    pygame.quit()
+                    exit()
+
+        screen.fill(BLACK)
+
+        # Title
+        title_text = font_title.render("Star Wars", True, WHITE)
+        title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4))
+        screen.blit(title_text, title_rect)
+
+        # Instructions
+        instruction_text = font_menu.render("Choose Vader's AI:", True, WHITE)
+        instruction_rect = instruction_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 80))
+        screen.blit(instruction_text, instruction_rect)
+
+        # Menu options
+        for i, option in enumerate(ml_options):
+            text_color = YELLOW if i == selected_option_index else WHITE
+            option_text = font_menu.render(option, True, text_color)
+            
+            # Calculate position for each option
+            option_rect = option_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 20 + i * 60))
+            
+            # Draw a background rectangle for the selected option
+            if i == selected_option_index:
+                padding = 20
+                bg_rect = pygame.Rect(option_rect.left - padding, option_rect.top - padding,
+                                      option_rect.width + 2 * padding, option_rect.height + 2 * padding)
+                pygame.draw.rect(screen, DARK_GRAY, bg_rect, border_radius=10) # Rounded corners
+            
+            screen.blit(option_text, option_rect)
+
+        pygame.display.flip()
+        clock.tick(60)
+
+# --- Game Start ---
+# Call the main menu function before starting the game loop
+main_menu()
+print(f"Selected ML type for Vader: {selected_ml_type}")
 
 # Main game loop
 running = True
@@ -127,28 +195,27 @@ while running:
         if luke_rect.right > SCREEN_WIDTH:
             luke_rect.right = SCREEN_WIDTH
 
-        # Vader's horizontal movement
+        # Vader's horizontal movement (currently constant, will be replaced by ML)
         if vader_alive: # Only move Vader if he is alive
             vader_rect.x += DODGER_SPEED * vader_direction
 
             # Reverse direction if Vader hits screen edges
             if vader_rect.left < 0:
-                vader_rect.left = 0 # Snap to edge
-                vader_direction = 1 # Change direction to right
+                vader_rect.left = 0
+                vader_direction = 1
             elif vader_rect.right > SCREEN_WIDTH:
-                vader_rect.right = SCREEN_WIDTH # Snap to edge
-                vader_direction = -1 # Change direction to left
+                vader_rect.right = SCREEN_WIDTH
+                vader_direction = -1
 
             # Vader's shooting logic
             vader_shot_timer += 1
             if vader_shot_timer >= VADER_SHOT_INTERVAL:
-                vader_shot_timer = 0 # Reset timer
-                # Beam starts from Vader's center bottom
+                vader_shot_timer = 0
                 vader_beam_rect = pygame.Rect(vader_rect.centerx - BEAM_WIDTH // 2, vader_rect.bottom, BEAM_WIDTH, BEAM_HEIGHT)
                 vader_beams.append(vader_beam_rect)
 
         # Update Luke's beam positions and check for off-screen beams
-        for beam in player_beams[:]: # Iterate over a copy to allow modification during iteration
+        for beam in player_beams[:]:
             beam.y += PLAYER_BEAM_SPEED
             if beam.y < 0:
                 player_beams.remove(beam)
@@ -156,20 +223,20 @@ while running:
             # Collision detection with Vader
             if vader_alive and beam.colliderect(vader_rect):
                 vader_alive = False
-                game_over = True # Game ends when Vader is hit
-                player_beams.remove(beam) # Remove the beam that hit Vader
+                game_over = True
+                player_beams.remove(beam)
                 print("Vader hit! You Win!")
         
         # Update Vader's beam positions and check for off-screen beams
-        for beam in vader_beams[:]: # Iterate over a copy
+        for beam in vader_beams[:]:
             beam.y += DODGER_BEAM_SPEED
-            if beam.y > SCREEN_HEIGHT: # If beam goes off bottom of screen
+            if beam.y > SCREEN_HEIGHT:
                 vader_beams.remove(beam)
             
             # Collision detection with Luke
             if beam.colliderect(luke_rect):
-                game_over = True # Game ends when Luke is hit
-                vader_beams.remove(beam) # Remove the beam that hit Luke
+                game_over = True
+                vader_beams.remove(beam)
                 print("Luke hit! Game Over!")
 
     # Drawing
@@ -193,11 +260,9 @@ while running:
         screen.blit(restart_text, text_rect_restart)
     
     # Display "Game Over!" message if Luke is hit
-    if game_over and not vader_alive: # If Vader is dead, it's "You Win!"
-        pass # Already handled above
-    elif game_over and not vader_alive: # If Vader is dead, it's "You Win!"
-        pass # Already handled above
-    elif game_over and vader_alive: # If Luke is hit and Vader is still alive, it's "Game Over!"
+    if game_over and not vader_alive:
+        pass # Already handled above (You Win!)
+    elif game_over and vader_alive:
         game_over_text = font_game_over.render("Game Over!", True, GRAY)
         text_rect_game_over = game_over_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 30))
         screen.blit(game_over_text, text_rect_game_over)
@@ -215,7 +280,7 @@ while running:
     for beam in vader_beams:
         pygame.draw.rect(screen, DODGER_BEAM_COLOR, beam)
 
-    pygame.display.flip() # Use flip instead of update for full screen update
-    clock.tick(60) # Cap the frame rate at 60 FPS
+    pygame.display.flip()
+    clock.tick(60)
 
 pygame.quit()
